@@ -1,5 +1,8 @@
+import { router } from 'expo-router';
+import { LogOut } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext'; // <-- Import the context
 
 const lightTheme = {
@@ -12,6 +15,17 @@ const darkTheme = {
 const SettingsPage: React.FC = () => {
     const { isDarkMode, toggleDarkMode } = useTheme(); // <-- Use context
     const colors = isDarkMode ? darkTheme : lightTheme;
+    const { logOut, userId } = useAuth();
+
+    const handleLogOut = async () => {
+        try {
+            await logOut();
+            router.replace('/signIn');
+        } catch (error: any) {
+            Alert.alert("Logout Failed", error.message);
+        }
+    };
+
     return (
         <View style={[styles.pageContainer, { backgroundColor: colors.background }]}>
             <Text style={[styles.pageTitle, { color: colors.text }]}>Settings</Text>
@@ -26,6 +40,13 @@ const SettingsPage: React.FC = () => {
                         thumbColor={isDarkMode ? "#f5dd4b" : "#f4f3f4"}
                     />
                 </View>
+                <View style={styles.settingRow}>
+                    <Text style={[styles.settingLabel, { color: colors.text, flex: 1 }]}>User ID: <Text style={{color: colors.textSecondary, fontSize: 12}}>{userId}</Text></Text>
+                </View>
+                <TouchableOpacity onPress={handleLogOut} style={styles.logoutButton}>
+                    <LogOut color="#ef4444" width={20} height={20} />
+                    <Text style={styles.logoutButtonText}>Log Out</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -42,4 +63,19 @@ const styles = StyleSheet.create({
     cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
     settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     settingLabel: { fontSize: 16 },
+    logoutButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 16,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: '#fee2e2',
+    },
+    logoutButtonText: {
+        color: '#ef4444',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 8,
+    },
 });

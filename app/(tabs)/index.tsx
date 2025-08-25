@@ -1,17 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Link, useFocusEffect } from 'expo-router';
+// app/(tabs)/index.tsx
+
+import { Link } from 'expo-router';
 import { BookOpen, BrainCircuit, Briefcase, Check, CheckCircle, Circle, Dumbbell, Frown, Minus, Plus, Smile } from 'lucide-react-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useHabits } from '../../context/HabitContext'; // Import the habit context
 import { useTheme } from '../../context/ThemeContext';
-import type { Habit, HomePageProps } from '../../types';
-
-// --- MOCK DATA & CONFIG (Used only if no data is in storage) ---
-const initialHabits: Habit[] = [
-    { id: 1, name: "Morning Workout", icon: 'Dumbbell', color: "red", type: 'daily', completionType: 'checkmark', status: 'pending', streak: 5, longestStreak: 20, total: 120, completionRate: 75, notes: "Focus on cardio today.", reminder: true, reminderTime: "07:00" },
-    { id: 2, name: "Read for 30 mins", icon: 'BookOpen', color: "blue", type: 'daily', completionType: 'checkmark', status: 'completed', streak: 12, longestStreak: 30, total: 350, completionRate: 90, notes: "Chapter 4 of 'The Alchemist'.", reminder: false, reminderTime: null },
-];
+import type { Habit } from '../../types';
 
 const habitIcons: { [key: string]: React.FC<any> } = { Dumbbell, BookOpen, BrainCircuit, CheckCircle, Smile, Frown, Plus, Briefcase };
 const habitColors = {
@@ -39,8 +35,6 @@ const darkTheme = {
     background: '#111827', card: '#1f2937', text: '#f9fafb', textSecondary: '#9ca3af', border: '#374151',
     tabBg: '#374151', activeTab: '#4b5563', activeTabText: '#60a5fa',
 };
-
-// --- COMPONENTS ---
 
 const HomeHeader: React.FC<{ habits: Habit[], isDarkMode: boolean }> = ({ habits, isDarkMode }) => {
     const today = new Date();
@@ -104,74 +98,82 @@ const HabitCard: React.FC<{ habit: Habit, onUpdate: (id: number, updates: Partia
     );
 };
 
-const HomePage: React.FC<Omit<HomePageProps, 'onAddNewHabit'>> = ({ habits, setHabits, onSelectHabit, isDarkMode }) => {
+const HomePage: React.FC<{ onSelectHabit: (habit: Habit) => void, isDarkMode: boolean }> = ({ onSelectHabit, isDarkMode }) => {
     const [activeTab, setActiveTab] = useState('dailies');
+    const { habits, updateHabit } = useHabits(); // Use the habit context
     const colors = isDarkMode ? darkTheme : lightTheme;
 
-    const updateHabit = (id: number, updates: Partial<Habit>) => setHabits(habits.map((h: Habit) => (h.id === id ? { ...h, ...updates } : h)));
-    const changeHabitCount = (id: number, change: number) => setHabits(habits.map((h: Habit) => (h.id === id ? { ...h, count: Math.max(0, (h.count || 0) + change) } : h)));
-    const filteredHabits = habits.filter((h: Habit) => (activeTab === 'dailies' && h.type === 'daily') || (activeTab === 'good' && h.type === 'good') || (activeTab === 'bad' && h.type === 'bad') || (activeTab === 'productivity' && h.type === 'productivity'));
+    const changeHabitCount = (id: number, change: number) => {
+        const habit = habits.find(h => h.id === id);
+        if (habit) {
+            updateHabit(id, { count: Math.max(0, (habit.count || 0) + change) });
+        }
+    };
+    
+    const filteredHabits = habits.filter((h: Habit) => 
+        (activeTab === 'dailies' && h.type === 'daily') || 
+        (activeTab === 'good' && h.type === 'good') || 
+        (activeTab === 'bad' && h.type === 'bad') || 
+        (activeTab === 'productivity' && h.type === 'productivity')
+    );
 
     return (
         <View>
             <HomeHeader habits={habits} isDarkMode={isDarkMode} />
             <View style={[styles.tabContainer, { backgroundColor: colors.tabBg }]}>
-                <TouchableOpacity onPress={() => setActiveTab('dailies')} style={[styles.tabButton, activeTab === 'dailies' && { backgroundColor: colors.activeTab }]}><Text style={[styles.tabText, {color: colors.textSecondary}, activeTab === 'dailies' && { color: colors.activeTabText }]}>Dailies</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => setActiveTab('good')} style={[styles.tabButton, activeTab === 'good' && { backgroundColor: colors.activeTab }]}><Text style={[styles.tabText, {color: colors.textSecondary}, activeTab === 'good' && { color: colors.activeTabText }]}>Good</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => setActiveTab('bad')} style={[styles.tabButton, activeTab === 'bad' && { backgroundColor: colors.activeTab }]}><Text style={[styles.tabText, {color: colors.textSecondary}, activeTab === 'bad' && { color: colors.activeTabText }]}>Bad</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => setActiveTab('productivity')} style={[styles.tabButton, activeTab === 'productivity' && { backgroundColor: colors.activeTab }]}><Text style={[styles.tabText, {color: colors.textSecondary}, activeTab === 'productivity' && { color: colors.activeTabText }]}>Productivity</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => setActiveTab('dailies')} style={[styles.tabButton, activeTab === 'dailies' && { backgroundColor: colors.activeTab }]}>
+                    <Text style={[styles.tabText, {color: colors.textSecondary}, activeTab === 'dailies' && { color: colors.activeTabText }]}>Dailies</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setActiveTab('good')} style={[styles.tabButton, activeTab === 'good' && { backgroundColor: colors.activeTab }]}>
+                    <Text style={[styles.tabText, {color: colors.textSecondary}, activeTab === 'good' && { color: colors.activeTabText }]}>Good</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setActiveTab('bad')} style={[styles.tabButton, activeTab === 'bad' && { backgroundColor: colors.activeTab }]}>
+                    <Text style={[styles.tabText, {color: colors.textSecondary}, activeTab === 'bad' && { color: colors.activeTabText }]}>Bad</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setActiveTab('productivity')} style={[styles.tabButton, activeTab === 'productivity' && { backgroundColor: colors.activeTab }]}>
+                    <Text style={[styles.tabText, {color: colors.textSecondary}, activeTab === 'productivity' && { color: colors.activeTabText }]}>Productivity</Text>
+                </TouchableOpacity>
             </View>
-            <View style={styles.habitList}>{filteredHabits.length > 0 ? filteredHabits.map(habit => <HabitCard key={habit.id} habit={habit} onUpdate={updateHabit} onCountChange={changeHabitCount} onSelect={onSelectHabit} isDarkMode={isDarkMode} />) : <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No habits in this category yet.</Text>}</View>
+            <View style={styles.habitList}>
+                {filteredHabits.length > 0 ? 
+                    filteredHabits.map(habit => 
+                        <HabitCard 
+                            key={habit.id} 
+                            habit={habit} 
+                            onUpdate={updateHabit} 
+                            onCountChange={changeHabitCount} 
+                            onSelect={onSelectHabit} 
+                            isDarkMode={isDarkMode} 
+                        />
+                    ) : 
+                    <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No habits in this category yet.</Text>
+                }
+            </View>
         </View>
     );
 };
 
 export default function HomeScreen() {
-    const [habits, setHabits] = useState<Habit[]>([]);
     const { isDarkMode } = useTheme(); 
+    const { loading } = useHabits();
     const colors = isDarkMode ? darkTheme : lightTheme;
-
-    useFocusEffect(
-      useCallback(() => {
-        const loadHabits = async () => {
-            try {
-                const savedHabits = await AsyncStorage.getItem('habits');
-                if (savedHabits !== null) {
-                    setHabits(JSON.parse(savedHabits));
-                } else {
-                    setHabits(initialHabits);
-                }
-            } catch (e) {
-                console.error('Failed to load habits.', e);
-                setHabits(initialHabits);
-            }
-        };
-
-        loadHabits();
-      }, [])
-    );
-
-    useEffect(() => {
-        const saveHabits = async () => {
-            try {
-                await AsyncStorage.setItem('habits', JSON.stringify(habits));
-            } catch (e) {
-                console.error('Failed to save habits.', e);
-            }
-        };
-        if (habits.length > 0) {
-            saveHabits();
-        }
-    }, [habits]);
 
     const handleSelectHabit = (habit: Habit) => {
         console.log("Navigate to habit:", habit.name);
     };
+
+    if (loading) {
+        return (
+            <SafeAreaView style={{flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center'}}>
+                <Text style={{color: colors.text}}>Loading habits...</Text>
+            </SafeAreaView>
+        );
+    }
     
     return (
         <SafeAreaView style={{flex: 1, backgroundColor: colors.background}}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <HomePage habits={habits} setHabits={setHabits} onSelectHabit={handleSelectHabit} isDarkMode={isDarkMode} />
+                <HomePage onSelectHabit={handleSelectHabit} isDarkMode={isDarkMode} />
             </ScrollView>
             <Link href="/modal" asChild>
                 <TouchableOpacity style={styles.fab}>
