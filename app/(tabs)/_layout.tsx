@@ -1,49 +1,49 @@
-import { Stack, Tabs, useRouter, useSegments } from 'expo-router';
-import React, { useEffect } from 'react';
-
+import { Tabs } from 'expo-router';
+import React from 'react';
+// import { Stack, Tabs, useRouter, useSegments } from 'expo-router';
 import { BarChart2, ClipboardList, Home, Settings } from 'lucide-react-native';
-import { useAuth } from '../../context/AuthContext';
+// import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext'; // <-- Import ThemeContext
 
-const InitialLayout = () => {
-  const { userId, isLoading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
+// const InitialLayout = () => {
+//   const { userId, isLoading } = useAuth();
+//   const segments = useSegments();
+//   const router = useRouter();
 
-  // Add debug logging
-  console.log('Auth Debug - userId:', userId);
-  console.log('Auth Debug - isLoading:', isLoading);
-  console.log('Auth Debug - segments:', segments);
+//   // Add debug logging
+//   console.log('Auth Debug - userId:', userId);
+//   console.log('Auth Debug - isLoading:', isLoading);
+//   console.log('Auth Debug - segments:', segments);
 
-  useEffect(() => {
-    if (isLoading) {
-      console.log('Auth still loading, skipping navigation');
-      return;
-    }
+//   useEffect(() => {
+//     if (isLoading) {
+//       console.log('Auth still loading, skipping navigation');
+//       return;
+//     }
 
-    const inTabsGroup = segments[0] === '(tabs)';
-    console.log('Auth Debug - inTabsGroup:', inTabsGroup);
+//     const inTabsGroup = segments[0] === '(tabs)';
+//     console.log('Auth Debug - inTabsGroup:', inTabsGroup);
 
-    if (userId && !inTabsGroup) {
-      console.log('User authenticated, navigating to tabs');
-      router.replace('/(tabs)');
-    } else if (!userId && inTabsGroup) {
-      console.log('User not authenticated, navigating to signIn');
-      router.replace('/signIn');
-    }
-  }, [userId, isLoading, segments, router]);
+//     if (userId && !inTabsGroup) {
+//       console.log('User authenticated, navigating to tabs');
+//       router.replace('/(tabs)');
+//     } else if (!userId && inTabsGroup) {
+//       console.log('User not authenticated, navigating to signIn');
+//       router.replace('/signIn');
+//     }
+//   }, [userId, isLoading, segments, router]);
 
-  return (
-    <Stack screenOptions={{
-    headerShown: false
-}}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="signIn" options={{ headerShown: false }} />
-      <Stack.Screen name="signUp" options={{ headerShown: false }} />
-      <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
-    </Stack>
-  );
-};
+//   return (
+//     <Stack screenOptions={{
+//     headerShown: false
+// }}>
+//       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+//       <Stack.Screen name="signIn" options={{ headerShown: false }} />
+//       <Stack.Screen name="signUp" options={{ headerShown: false }} />
+//       <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
+//     </Stack>
+//   );
+// };
 
 // --- THEMES (moved to match notes.tsx structure) ---
 const lightTheme = {

@@ -98,8 +98,12 @@ export interface HabitCardProps {
   habit: Habit;
   onUpdate: (id: number, updates: Partial<Habit>) => void;
   onCountChange: (id: number, change: number) => void;
-  onSelect: (habit: Habit) => void;
   isDarkMode: boolean;
+  
+  // Add the new props for expanding and deleting
+  onToggleExpand: () => void;
+  isExpanded: boolean;
+  onDelete: () => void;
 }
 
 // Defines the props for HomeHeader component
@@ -135,6 +139,7 @@ export interface Theme {
   activeTab: string;
   activeTabText: string;
   saveButton?: string;
+  cardExpanded: string;
 }
 
 // Icon mapping type
